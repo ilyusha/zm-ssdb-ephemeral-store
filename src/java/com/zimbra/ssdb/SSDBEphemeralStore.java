@@ -1,8 +1,18 @@
 package com.zimbra.ssdb;
 
+import java.util.List;
+
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
+import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisException;
+
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
@@ -14,11 +24,6 @@ import com.zimbra.cs.ephemeral.EphemeralLocation;
 import com.zimbra.cs.ephemeral.EphemeralResult;
 import com.zimbra.cs.ephemeral.EphemeralStore;
 import com.zimbra.cs.ldap.LdapClient;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisConnectionException;
-import redis.clients.jedis.exceptions.JedisException;
 
 /**
  *
@@ -252,5 +257,28 @@ public class SSDBEphemeralStore extends EphemeralStore {
     @VisibleForTesting
     public String toValue(EphemeralInput input, EphemeralLocation location) {
         return encodeValue(input, location);
+    }
+    @Override
+    public void deleteData(EphemeralLocation location) throws ServiceException {
+        try (Jedis jedis = pool.getResource()) {
+            String cursor = "0";
+            while (true) {
+                ScanParams params = new ScanParams();
+                params.count(100);
+                String prefix = Joiner.on("|").join(location.getLocation());
+                params.match(prefix + "*");
+                ScanResult<String> result = jedis.scan(cursor, params);
+                List<String> keys = result.getResult();
+                String[] keysArr = (String[]) keys.toArray();
+                jedis.del(keysArr);
+                String nextCursor = result.getStringCursor();
+                if (nextCursor.equals("0")) {
+                    //no more results
+                    break;
+                } else {
+                    cursor = nextCursor;
+                }
+            }
+        }
     }
 }

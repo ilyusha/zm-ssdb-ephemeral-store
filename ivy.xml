@@ -22,7 +22,7 @@
   <info organisation="zimbra" module="zm-ssdb-ephemeral-store" status="integration">
   </info>
   <dependencies>
-  	<dependency org="redis.clients" name="jedis" rev="2.9.0"/>
+  	<dependency org="redis.clients" name="jedis" rev="2.9.0-SNAPSHOT"/>
 	<dependency org="javax.mail" name="mail" rev="1.4.5" />
 	<dependency org="com.google.guava" name="guava" rev="13.0.1" />
 	<dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" />

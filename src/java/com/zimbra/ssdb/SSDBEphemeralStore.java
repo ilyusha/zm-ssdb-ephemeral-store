@@ -1,13 +1,11 @@
 package com.zimbra.ssdb;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.ScanParams;
-import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
@@ -261,24 +259,9 @@ public class SSDBEphemeralStore extends EphemeralStore {
     @Override
     public void deleteData(EphemeralLocation location) throws ServiceException {
         try (Jedis jedis = pool.getResource()) {
-            String cursor = "0";
-            while (true) {
-                ScanParams params = new ScanParams();
-                params.count(100);
-                String prefix = Joiner.on("|").join(location.getLocation());
-                params.match(prefix + "*");
-                ScanResult<String> result = jedis.scan(cursor, params);
-                List<String> keys = result.getResult();
-                String[] keysArr = (String[]) keys.toArray();
-                jedis.del(keysArr);
-                String nextCursor = result.getStringCursor();
-                if (nextCursor.equals("0")) {
-                    //no more results
-                    break;
-                } else {
-                    cursor = nextCursor;
-                }
-            }
+            String prefix = Joiner.on("|").join(location.getLocation());
+            Set<String> keys = jedis.keys(prefix + "*");
+            jedis.del((String[]) keys.toArray());
         }
     }
 }

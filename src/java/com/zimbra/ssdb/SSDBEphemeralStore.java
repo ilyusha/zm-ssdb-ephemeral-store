@@ -260,7 +260,7 @@ public class SSDBEphemeralStore extends EphemeralStore {
     public void deleteData(EphemeralLocation location) throws ServiceException {
         try (Jedis jedis = pool.getResource()) {
             String prefix = Joiner.on("|").join(location.getLocation());
-            Set<String> keys = jedis.keys(prefix + "*");
+            Set<String> keys = jedis.keys(String.format("%s| %s|| 100", prefix, prefix));
             jedis.del((String[]) keys.toArray());
         }
     }

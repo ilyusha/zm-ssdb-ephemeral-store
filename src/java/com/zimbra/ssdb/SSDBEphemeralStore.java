@@ -8,6 +8,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
@@ -221,7 +222,7 @@ public class SSDBEphemeralStore extends EphemeralStore {
         @Override
         public synchronized void  shutdown() {
             if(instance != null) {
-                ZimbraLog.ephemeral.info("shutting down SSDB pool");
+                ZimbraLog.ephemeral.info("shutting down SSDB pool: %s", Throwables.getStackTraceAsString(new Exception()));
                 instance.getPool().close();
                 instance.getPool().destroy();
                 instance = null;

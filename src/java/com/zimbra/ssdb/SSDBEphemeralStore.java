@@ -156,6 +156,7 @@ public class SSDBEphemeralStore extends EphemeralStore {
                     }
                 }
                 GenericObjectPoolConfig config = getPoolConfig();
+                ZimbraLog.ephemeral.info("creating SSDB pool for URL %s", url);
                 if(port != null) {
                     return new JedisPool(config, host, port);
                 } else {
@@ -220,6 +221,7 @@ public class SSDBEphemeralStore extends EphemeralStore {
         @Override
         public synchronized void  shutdown() {
             if(instance != null) {
+                ZimbraLog.ephemeral.info("shutting down SSDB pool");
                 instance.getPool().close();
                 instance.getPool().destroy();
                 instance = null;
